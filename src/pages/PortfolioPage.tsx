@@ -14,6 +14,7 @@ import {
   parseImportData, summarizePortfolio, analyzeCrossSelling, analyzeRepricing,
   stressTestPortfolio, segmentBy, generateCSVTemplate,
 } from '@/lib/portfolioAnalysis';
+import { generateMockCSV } from '@/lib/mockPortfolioData';
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
@@ -65,6 +66,23 @@ export default function PortfolioPage() {
     if (file) handleFileUpload(file);
   }, [handleFileUpload]);
 
+  const loadMockData = useCallback(() => {
+    setImporting(true);
+    setTimeout(() => {
+      const csv = generateMockCSV(500);
+      Papa.parse(csv, {
+        complete: (result) => {
+          const rows = result.data as string[][];
+          const parsed = parseImportData(rows, config);
+          setCustomers(parsed);
+          setImporting(false);
+        },
+        delimiter: ';',
+        skipEmptyLines: true,
+      });
+    }, 50);
+  }, [config]);
+
   const downloadTemplate = () => {
     const csv = generateCSVTemplate();
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -108,6 +126,12 @@ export default function PortfolioPage() {
               <Button variant="outline" onClick={downloadTemplate}>
                 <Download className="mr-2 h-4 w-4" /> Ladda ner mall
               </Button>
+            </div>
+            <div className="mt-4 border-t pt-4">
+              <Button variant="secondary" onClick={loadMockData} disabled={importing}>
+                <Users className="mr-2 h-4 w-4" /> Ladda 500 testkunder
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">Genererar slumpmässig avidentifierad data för demo</p>
             </div>
             {importing && <p className="mt-4 text-sm text-muted-foreground">Bearbetar...</p>}
           </div>
