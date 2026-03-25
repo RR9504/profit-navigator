@@ -124,12 +124,12 @@ export function calculateProfitability(
   const amortizationRate = calcAmortizationRate(ltvPercent, dtiPercent);
   const monthlyAmortization = (input.loanAmount * amortizationRate) / 12;
 
-  // --- Risk weight ---
+  // --- Risk weight (scaled by loan type capital factor) ---
   const riskWeightPercent = lookupRiskWeight(ltvPercent, config.riskWeightBands);
-  const riskWeightedAssets = input.loanAmount * (riskWeightPercent / 100);
+  const riskWeightedAssets = input.loanAmount * (riskWeightPercent / 100) * loanTypeConfig.capitalAllocationFactor;
   const allocatedCapital = riskWeightedAssets * (config.capitalRequirementPercent / 100);
 
-  // --- Expected loss (PD × LGD × EAD) ---
+  // --- Expected loss (PD × LGD × EAD, scaled by loan type risk factor) ---
   const basePD = config.basePDPercent;
   let pdMultiplier = 1.0;
   if (ltvPercent > 85) pdMultiplier = 2.0;
@@ -141,10 +141,13 @@ export function calculateProfitability(
   const adjustedPD = basePD * pdMultiplier;
   const lgd = config.lgdPercent;
   const ead = input.loanAmount;
-  const annualEL = ead * (adjustedPD / 100) * (lgd / 100);
+  const annualEL = ead * (adjustedPD / 100) * (lgd / 100) * loanTypeConfig.expectedLossFactor;
 
   // --- ANNUAL INCOME ---
-  const netInterestIncome = input.loanAmount * (spread / 100);
+  // Income model: full_margin = own balance sheet, provision = Hypotek commission
+  const netInterestIncome = loanTypeConfig.incomeModel === 'full_margin'
+    ? input.loanAmount * (spread / 100)
+    : input.loanAmount * (loanTypeConfig.provisionRatePercent / 100);
   const equityFTP = allocatedCapital * (config.equityFTPRate / 100);
 
   const depositBalance = input.depositBalance +

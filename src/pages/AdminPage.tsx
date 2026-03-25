@@ -88,26 +88,68 @@ export default function AdminPage() {
         {/* Loan types */}
         <div className="metric-card space-y-4">
           <h3 className="section-header">Lånetyper & Kalkylpriser (KRES)</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="pb-2 text-left font-medium">Typ</th>
-                <th className="pb-2 text-right font-medium">Upplägg (kr)</th>
-                <th className="pb-2 text-right font-medium">Årskostnad (kr)</th>
-                <th className="pb-2 text-right font-medium">Avslut (kr)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {config.kalkylPrices.loanTypes.map((lt, i) => (
-                <tr key={lt.key} className="border-b border-border/50">
-                  <td className="py-2 font-medium">{lt.label}</td>
-                  <td className="py-2"><Input type="number" value={lt.setupCost} onChange={e => { const lts = [...config.kalkylPrices.loanTypes]; lts[i] = { ...lts[i], setupCost: Number(e.target.value) }; setConfig(p => ({ ...p, kalkylPrices: { ...p.kalkylPrices, loanTypes: lts } })); }} className="ml-auto w-24 text-right font-mono" /></td>
-                  <td className="py-2"><Input type="number" value={lt.annualCost} onChange={e => { const lts = [...config.kalkylPrices.loanTypes]; lts[i] = { ...lts[i], annualCost: Number(e.target.value) }; setConfig(p => ({ ...p, kalkylPrices: { ...p.kalkylPrices, loanTypes: lts } })); }} className="ml-auto w-24 text-right font-mono" /></td>
-                  <td className="py-2"><Input type="number" value={lt.closingCost} onChange={e => { const lts = [...config.kalkylPrices.loanTypes]; lts[i] = { ...lts[i], closingCost: Number(e.target.value) }; setConfig(p => ({ ...p, kalkylPrices: { ...p.kalkylPrices, loanTypes: lts } })); }} className="ml-auto w-24 text-right font-mono" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {config.kalkylPrices.loanTypes.map((lt, i) => {
+            const updateLT = (field: string, val: number | string) => {
+              const lts = [...config.kalkylPrices.loanTypes];
+              lts[i] = { ...lts[i], [field]: val };
+              setConfig(p => ({ ...p, kalkylPrices: { ...p.kalkylPrices, loanTypes: lts } }));
+            };
+            return (
+              <div key={lt.key} className="rounded-lg border p-4 space-y-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-sm">{lt.label}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${lt.incomeModel === 'full_margin' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
+                    {lt.incomeModel === 'full_margin' ? 'Egen balansräkning' : 'Provisionsmodell'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Upplägg (kr)</Label>
+                    <Input type="number" value={lt.setupCost} onChange={e => updateLT('setupCost', Number(e.target.value))} className="font-mono" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Årskostnad (kr)</Label>
+                    <Input type="number" value={lt.annualCost} onChange={e => updateLT('annualCost', Number(e.target.value))} className="font-mono" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Avslut (kr)</Label>
+                    <Input type="number" value={lt.closingCost} onChange={e => updateLT('closingCost', Number(e.target.value))} className="font-mono" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Intäktsmodell</Label>
+                    <select
+                      value={lt.incomeModel}
+                      onChange={e => updateLT('incomeModel', e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                    >
+                      <option value="full_margin">Fullt räntenetto (egen bok)</option>
+                      <option value="provision">Provision (Hypotek)</option>
+                    </select>
+                  </div>
+                  {lt.incomeModel === 'provision' && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Provisionssats (%/år)</Label>
+                      <Input type="number" step="0.01" value={lt.provisionRatePercent} onChange={e => updateLT('provisionRatePercent', Number(e.target.value))} className="font-mono" />
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Kapitalallokering (faktor 0–1)</Label>
+                    <Input type="number" step="0.05" min="0" max="1" value={lt.capitalAllocationFactor} onChange={e => updateLT('capitalAllocationFactor', Number(e.target.value))} className="font-mono" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">1.0 = full risk på egen bok, 0 = off-balance</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Förväntad förlust (faktor 0–1)</Label>
+                    <Input type="number" step="0.05" min="0" max="1" value={lt.expectedLossFactor} onChange={e => updateLT('expectedLossFactor', Number(e.target.value))} className="font-mono" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">1.0 = full kreditrisk, 0 = Hypotek tar risken</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
               <Label className="text-xs text-muted-foreground">Fast kundkostnad (kr/år)</Label>

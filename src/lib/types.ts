@@ -34,12 +34,18 @@ export interface CrossSellingRule {
 
 export type LoanType = 'hypotek' | 'bolan_bank';
 
+export type IncomeModel = 'full_margin' | 'provision';
+
 export interface LoanTypeConfig {
   key: LoanType;
   label: string;
   setupCost: number;
   annualCost: number;
   closingCost: number;
+  incomeModel: IncomeModel;
+  provisionRatePercent: number;     // Annual provision % of loan (for Hypotek)
+  capitalAllocationFactor: number;  // 1.0 = full balance sheet, 0.0 = off-balance
+  expectedLossFactor: number;       // 1.0 = full risk, 0.0 = no risk (Hypotek takes it)
 }
 
 export interface KalkylPrices {

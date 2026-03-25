@@ -67,8 +67,18 @@ export const defaultConfig: AdminConfig = {
 
   kalkylPrices: {
     loanTypes: [
-      { key: 'hypotek', label: 'Swedbank Hypotek Privat', setupCost: 2248, annualCost: 283, closingCost: 286 },
-      { key: 'bolan_bank', label: 'Bolån i banken', setupCost: 2249, annualCost: 800, closingCost: 286 },
+      {
+        key: 'hypotek', label: 'Swedbank Hypotek Privat',
+        setupCost: 2248, annualCost: 283, closingCost: 286,
+        incomeModel: 'provision', provisionRatePercent: 0.20,
+        capitalAllocationFactor: 0.10, expectedLossFactor: 0.10,
+      },
+      {
+        key: 'bolan_bank', label: 'Bolån i banken',
+        setupCost: 2249, annualCost: 800, closingCost: 286,
+        incomeModel: 'full_margin', provisionRatePercent: 0,
+        capitalAllocationFactor: 1.0, expectedLossFactor: 1.0,
+      },
     ],
     customerFixedCost: 3000,
     arrangementFee: 1500,
