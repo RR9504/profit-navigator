@@ -144,10 +144,19 @@ export function calculateProfitability(
   const annualEL = ead * (adjustedPD / 100) * (lgd / 100) * loanTypeConfig.expectedLossFactor;
 
   // --- ANNUAL INCOME ---
-  // Income model: full_margin = own balance sheet, provision = Hypotek commission
-  const netInterestIncome = loanTypeConfig.incomeModel === 'full_margin'
-    ? input.loanAmount * (spread / 100)
-    : input.loanAmount * (loanTypeConfig.provisionRatePercent / 100);
+  // full_margin: own balance sheet → full spread (customerRate - FTP)
+  // provision: Hypotek commission → base provision adjusted by discount given
+  //   If Sparbank gives discount off list, it comes out of their provision
+  //   effectiveProvision = baseProvision - (listRate - effectiveCustomerRate)
+  //                      = baseProvision - autoDiscount - savingsDiscount + rateDeviation
+  let netInterestIncome: number;
+  if (loanTypeConfig.incomeModel === 'full_margin') {
+    netInterestIncome = input.loanAmount * (spread / 100);
+  } else {
+    const discountFromList = listRate - effectiveCustomerRate;
+    const effectiveProvision = loanTypeConfig.provisionRatePercent - discountFromList;
+    netInterestIncome = input.loanAmount * (effectiveProvision / 100);
+  }
   const equityFTP = allocatedCapital * (config.equityFTPRate / 100);
 
   const depositBalance = input.depositBalance +

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { CustomerInput, Scenario, AdminConfig } from '@/lib/types';
 import { calculateProfitability, suggestOptimization } from '@/lib/calculationEngine';
 import { loadConfig } from '@/lib/configStore';
@@ -12,7 +12,20 @@ import { KALPDisplay } from '@/components/KALPDisplay';
 import { StressTestDisplay } from '@/components/StressTestDisplay';
 
 export default function AdvisorPage() {
-  const [config] = useState<AdminConfig>(loadConfig);
+  const [config, setConfig] = useState<AdminConfig>(loadConfig);
+
+  // Reload config when window regains focus (e.g. after admin changes)
+  useEffect(() => {
+    const onFocus = () => setConfig(loadConfig());
+    window.addEventListener('focus', onFocus);
+    // Also reload on visibility change (tab switching)
+    const onVisible = () => { if (document.visibilityState === 'visible') setConfig(loadConfig()); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
   const [input, setInput] = useState<CustomerInput>(defaultInput);
   const [scenarios, setScenarios] = useState<Scenario[]>(loadSavedScenarios);
 
