@@ -19,7 +19,8 @@ export const defaultConfig: AdminConfig = {
   // =============================================
   crossSellingRules: [
     // --- Lön ---
-    { id: 'salary', name: 'Löneinbetalning', category: 'salary', discountBps: 10, annualIncomeContribution: 1200, internalSetupCost: 0, internalAnnualCost: 0, enabled: true },
+    // Swedbank invoice: Lön/konto-ins 0.29 kr/transaktion × ~12/år = 3.5 kr/år
+    { id: 'salary', name: 'Löneinbetalning', category: 'salary', discountBps: 10, annualIncomeContribution: 1200, internalSetupCost: 0, internalAnnualCost: 4, enabled: true },
 
     // --- Försäkring ---
     { id: 'home-insurance-villa', name: 'Hemförsäkring villa', category: 'insurance', discountBps: 5, annualIncomeContribution: 3500, internalSetupCost: 204, internalAnnualCost: 0, enabled: true },
@@ -28,13 +29,16 @@ export const defaultConfig: AdminConfig = {
     { id: 'life-insurance', name: 'Trygghetsförsäkring', category: 'insurance', discountBps: 3, annualIncomeContribution: 2800, internalSetupCost: 221, internalAnnualCost: 0, enabled: true },
     { id: 'car-insurance', name: 'Fordonsförsäkring bil', category: 'insurance', discountBps: 3, annualIncomeContribution: 4200, internalSetupCost: 179, internalAnnualCost: 0, enabled: true },
     { id: 'mc-insurance', name: 'Fordonsförsäkring MC/snöskoter', category: 'insurance', discountBps: 2, annualIncomeContribution: 1800, internalSetupCost: 179, internalAnnualCost: 0, enabled: true },
+    // Swedbank invoice: Tre Kronor Support 0.31 kr/avtal/mån = 4 kr/år
+    { id: 'tre-kronor', name: 'Tre Kronor försäkringspaket', category: 'insurance', discountBps: 3, annualIncomeContribution: 2500, internalSetupCost: 221, internalAnnualCost: 4, enabled: true },
 
     // --- Sparande ---
+    // Swedbank invoice: Fondtorg 0.25 kr/kund/mån = 3 kr/år
     { id: 'isk-sparkonto', name: 'ISK sparkonto', category: 'savings', discountBps: 2, annualIncomeContribution: 400, internalSetupCost: 143, internalAnnualCost: 0, enabled: true },
     { id: 'isk-depa', name: 'ISK depå', category: 'savings', discountBps: 3, annualIncomeContribution: 800, internalSetupCost: 123, internalAnnualCost: 0, enabled: true },
-    { id: 'isk-fond', name: 'ISK fondkonto', category: 'savings', discountBps: 3, annualIncomeContribution: 1500, internalSetupCost: 143, internalAnnualCost: 0, enabled: true },
-    { id: 'fund', name: 'Fondsparande (ej ISK)', category: 'savings', discountBps: 3, annualIncomeContribution: 1500, internalSetupCost: 810, internalAnnualCost: 0, enabled: true },
-    { id: 'kapitalspar-barn', name: 'Kapitalspar Barn', category: 'savings', discountBps: 1, annualIncomeContribution: 600, internalSetupCost: 1186, internalAnnualCost: 0, enabled: true },
+    { id: 'isk-fond', name: 'ISK fondkonto', category: 'savings', discountBps: 3, annualIncomeContribution: 1500, internalSetupCost: 143, internalAnnualCost: 3, enabled: true },
+    { id: 'fund', name: 'Fondsparande (ej ISK)', category: 'savings', discountBps: 3, annualIncomeContribution: 1500, internalSetupCost: 810, internalAnnualCost: 3, enabled: true },
+    { id: 'kapitalspar-barn', name: 'Kapitalspar Barn', category: 'savings', discountBps: 1, annualIncomeContribution: 600, internalSetupCost: 1186, internalAnnualCost: 3, enabled: true },
 
     // --- Pension ---
     { id: 'pension-privat', name: 'Privat pension/Kapitalpension', category: 'pension', discountBps: 5, annualIncomeContribution: 2000, internalSetupCost: 1186, internalAnnualCost: 0, enabled: true },
@@ -54,10 +58,13 @@ export const defaultConfig: AdminConfig = {
     { id: 'konto-pmk', name: 'Penningmarknadskonto', category: 'account', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 188, internalAnnualCost: 356, enabled: true },
 
     // --- Digitalt ---
-    // Swedbank invoice: Bank-ID 1.83 kr/kund/mån = 22 kr/år, Swish 0.18-0.48/transaktion
+    // Costs from Swedbank invoice Nov 2024:
     { id: 'internetbank', name: 'Internetbank/Mobilbank', category: 'digital', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 143, internalAnnualCost: 0, enabled: true },
     { id: 'bankid', name: 'Bank-ID', category: 'digital', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 0, internalAnnualCost: 22, enabled: true },
+    { id: 'security-tokens', name: 'Säkerhetsdosa/tokens', category: 'digital', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 143, internalAnnualCost: 14, enabled: true },
+    { id: 'digital-support', name: 'Digital support (kundcenter)', category: 'digital', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 0, internalAnnualCost: 19, enabled: true },
     { id: 'swish', name: 'Swish', category: 'digital', discountBps: 0, annualIncomeContribution: 50, internalSetupCost: 0, internalAnnualCost: 40, enabled: true },
+    { id: 'e-faktura', name: 'E-faktura', category: 'digital', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 0, internalAnnualCost: 9, enabled: true },
     { id: 'e-bokforing', name: 'e-bokföring', category: 'digital', discountBps: 0, annualIncomeContribution: 300, internalSetupCost: 666, internalAnnualCost: 140, enabled: false },
 
     // --- Kredit ---
