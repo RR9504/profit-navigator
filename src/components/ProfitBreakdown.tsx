@@ -5,10 +5,6 @@ function fmt(n: number): string {
   return Math.round(n).toLocaleString('sv-SE');
 }
 
-function pct(n: number): string {
-  return n.toFixed(3) + '%';
-}
-
 function Row({ label, value, indent = false, bold = false, highlight = false, tooltip }: {
   label: string; value: number; indent?: boolean; bold?: boolean; highlight?: boolean;
   tooltip?: React.ReactNode;
@@ -56,11 +52,11 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
         <Row label="Räntenetto" value={r.annualIncome.netInterestIncome} bold tooltip={
           <>
             <TipLine label="Lånevolym" value={fmt(r.expectedLoss.ead)} />
-            <TipLine label="Kundränta" value={pct(r.effectiveCustomerRate * 100)} unit="" />
-            <TipLine label="FTP-ränta" value={pct(r.effectiveFTPRate * 100)} unit="" />
-            <TipLine label="Räntespread" value={pct(r.spread * 100)} unit="" />
-            {r.autoDiscount > 0 && <TipLine label="Produktrabatt" value={`-${pct(r.autoDiscount * 100)}`} unit="" />}
-            {r.savingsDiscount > 0 && <TipLine label="Sparanderabatt" value={`-${pct(r.savingsDiscount * 100)}`} unit="" />}
+            <TipLine label="Kundränta" value={`${r.effectiveCustomerRate.toFixed(2)}%`} unit="" />
+            <TipLine label="FTP-ränta" value={`${r.effectiveFTPRate.toFixed(2)}%`} unit="" />
+            <TipLine label="Räntespread" value={`${r.spread.toFixed(2)}%`} unit="" />
+            {r.autoDiscount > 0 && <TipLine label="Produktrabatt" value={`-${r.autoDiscount.toFixed(2)}%`} unit="" />}
+            {r.savingsDiscount > 0 && <TipLine label="Sparanderabatt" value={`-${r.savingsDiscount.toFixed(2)}%`} unit="" />}
             <div className="border-t my-1" />
             <TipLine label="= Lån × spread" value={r.annualIncome.netInterestIncome} />
           </>
@@ -76,18 +72,19 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
         )}
         <Row label="Equity FTP" value={r.annualIncome.equityFTP} indent tooltip={
           <>
-            <TipLine label="Allokerat kapital" value={r.allocatedCapital} />
-            <TipLine label="Equity FTP-sats" value={`${result.effectiveFTPRate.toFixed(2)}`} unit="%" />
+            <TipLine label="Allokerat kapital" value={fmt(r.allocatedCapital)} />
+            <TipLine label="Equity FTP-sats" value="1.50%" unit="" />
             <div className="border-t my-1" />
             <TipLine label="= Kapital × sats" value={r.annualIncome.equityFTP} />
           </>
         } />
         <Row label="Inlåningsintjäning" value={r.annualIncome.depositNetIncome} indent tooltip={
           <>
-            <TipLine label="Inlåningssaldo" value={fmt(Math.round(r.annualIncome.depositNetIncome / ((result.annualIncome.depositNetIncome !== 0 ? 1 : 0.01) * 0.013) * 0.013))} />
-            <TipLine label="FTP inlåning − kundränta" value="spread" unit="" />
+            <TipLine label="FTP inlåning" value="1.80%" unit="" />
+            <TipLine label="Kundränta inlåning" value="0.50%" unit="" />
+            <TipLine label="Spread" value="1.30%" unit="" />
             <div className="border-t my-1" />
-            <TipLine label="= Saldo × (FTP − kundränta)" value={r.annualIncome.depositNetIncome} />
+            <TipLine label="= Saldo × spread" value={r.annualIncome.depositNetIncome} />
           </>
         } />
         {r.annualIncome.savingsIncome > 0 && (
