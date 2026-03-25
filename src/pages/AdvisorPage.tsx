@@ -58,6 +58,9 @@ export default function AdvisorPage() {
           </div>
           <div className="flex items-center gap-4">
             <SignalIndicator signal={result.signal} message={result.signalMessage} size="lg" />
+            <a href="/portfolio" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Portfölj
+            </a>
             <a href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Admin
             </a>
