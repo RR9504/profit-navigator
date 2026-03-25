@@ -193,7 +193,9 @@ export interface ProfitabilityResult {
   monthlyAmortization: number;
 
   annualIncome: {
-    netInterestIncome: number;
+    grossInterestIncome: number;   // NII before discounts
+    discountEffect: number;        // Negative: cost of product/savings discounts
+    netInterestIncome: number;     // After discounts
     equityFTP: number;
     depositNetIncome: number;
     savingsIncome: number;

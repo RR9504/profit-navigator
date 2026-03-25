@@ -144,19 +144,27 @@ export function calculateProfitability(
   const annualEL = ead * (adjustedPD / 100) * (lgd / 100) * loanTypeConfig.expectedLossFactor;
 
   // --- ANNUAL INCOME ---
-  // full_margin: own balance sheet → full spread (customerRate - FTP)
-  // provision: Hypotek commission → base provision adjusted by discount given
-  //   If Sparbank gives discount off list, it comes out of their provision
-  //   effectiveProvision = baseProvision - (listRate - effectiveCustomerRate)
-  //                      = baseProvision - autoDiscount - savingsDiscount + rateDeviation
+  // Gross NII = income at list rate (no discounts)
+  // Discount effect = cost of product/savings discounts in kr
+  // Net NII = gross - discount effect
+  const totalDiscountPercent = autoDiscount + savingsDiscount; // always positive
+  let grossInterestIncome: number;
   let netInterestIncome: number;
+
   if (loanTypeConfig.incomeModel === 'full_margin') {
+    // Full margin: spread = customerRate - FTP
+    const grossSpread = listRate - effectiveFTPRate + input.rateDeviation;
+    grossInterestIncome = input.loanAmount * (grossSpread / 100);
     netInterestIncome = input.loanAmount * (spread / 100);
   } else {
+    // Provision: base provision adjusted by discounts
+    grossInterestIncome = input.loanAmount * ((loanTypeConfig.provisionRatePercent + input.rateDeviation) / 100);
     const discountFromList = listRate - effectiveCustomerRate;
     const effectiveProvision = loanTypeConfig.provisionRatePercent - discountFromList;
     netInterestIncome = input.loanAmount * (effectiveProvision / 100);
   }
+  const discountEffect = netInterestIncome - grossInterestIncome; // negative when discounts given
+
   const equityFTP = allocatedCapital * (config.equityFTPRate / 100);
 
   const depositBalance = input.depositBalance +
@@ -176,7 +184,8 @@ export function calculateProfitability(
   const totalAnnualIncomeFigure = netInterestIncome + equityFTP + depositNetIncome + savingsIncome + crossSellingIncome;
 
   const annualIncome = {
-    netInterestIncome, equityFTP, depositNetIncome, savingsIncome, crossSellingIncome,
+    grossInterestIncome, discountEffect, netInterestIncome,
+    equityFTP, depositNetIncome, savingsIncome, crossSellingIncome,
     total: totalAnnualIncomeFigure,
   };
 

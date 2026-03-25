@@ -27,6 +27,15 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
       {/* Income */}
       <div>
         <Row label="Räntenetto" value={result.annualIncome.netInterestIncome} bold />
+        {result.annualIncome.discountEffect < -1 && (
+          <>
+            <Row label="Räntenetto före rabatter" value={result.annualIncome.grossInterestIncome} indent />
+            <div className="flex items-center justify-between py-1 pl-4">
+              <span className="text-sm text-signal-red">Rabatteffekt (produkter & sparande)</span>
+              <span className="font-mono text-sm text-signal-red">{fmt(result.annualIncome.discountEffect)} kr</span>
+            </div>
+          </>
+        )}
         <Row label="Equity FTP" value={result.annualIncome.equityFTP} indent />
         <Row label="Inlåningsintjäning" value={result.annualIncome.depositNetIncome} indent />
         {result.annualIncome.savingsIncome > 0 && (
