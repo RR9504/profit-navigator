@@ -166,7 +166,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Cross-selling - grouped by category */}
+        {/* Product catalog */}
         <div className="metric-card">
           <h3 className="section-header mb-4">Produktkatalog</h3>
           {PRODUCT_CATEGORIES.map(cat => {
@@ -279,10 +279,10 @@ export default function AdminPage() {
             <h3 className="section-header">OH-modell (aktivitetsbaserad)</h3>
             <p className="text-xs text-muted-foreground">Overhead fördelas per 2022-ramverket: % av respektive dimension.</p>
             {([
-              ['ancillaryRate', 'OH på Ancillary Income (%)'],
-              ['financingRate', 'OH på Financing Income (%)'],
-              ['exposureRate', 'OH på Exposure/lånevolym (%)'],
-              ['capitalRate', 'OH på Allokerat kapital (%)'],
+              ['ancillaryRate', 'OH på övriga produktintäkter (%)'],
+              ['financingRate', 'OH på finansieringsintäkt (%)'],
+              ['exposureRate', 'OH på lånevolym/exponering (%)'],
+              ['capitalRate', 'OH på allokerat kapital (%)'],
             ] as const).map(([key, label]) => (
               <div key={key}>
                 <Label className="text-xs text-muted-foreground">{label}</Label>

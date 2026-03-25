@@ -15,7 +15,7 @@ export function RateOverview({ result, config, input }: {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MetricBox label="Kundränta" value={`${result.effectiveCustomerRate.toFixed(2)}%`} />
-        <MetricBox label="Spread" value={`${result.spread.toFixed(2)}%`} warn={result.spread < 0.5} />
+        <MetricBox label="Räntespread" value={`${result.spread.toFixed(2)}%`} warn={result.spread < 0.5} />
         <MetricBox label="Belåningsgrad" value={`${result.ltvPercent.toFixed(1)}%`} warn={result.ltvPercent > 85} />
         <MetricBox label="Skuldkvot" value={`${result.dtiPercent.toFixed(0)}%`} warn={result.dtiPercent > 450} />
       </div>
@@ -57,7 +57,7 @@ export function RateOverview({ result, config, input }: {
       {/* Details */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MetricBox label="Riskvikt" value={`${result.riskWeightPercent}%`} small />
-        <MetricBox label="Allok. kapital" value={`${Math.round(result.allocatedCapital).toLocaleString('sv-SE')} kr`} small />
+        <MetricBox label="Allokerat kapital" value={`${Math.round(result.allocatedCapital).toLocaleString('sv-SE')} kr`} small />
         <MetricBox label="Amortering" value={result.amortizationRate > 0 ? `${(result.amortizationRate * 100).toFixed(0)}%` : 'Nej'} small />
         <MetricBox label="Mån. amor." value={result.monthlyAmortization > 0 ? `${Math.round(result.monthlyAmortization).toLocaleString('sv-SE')} kr` : '—'} small />
       </div>

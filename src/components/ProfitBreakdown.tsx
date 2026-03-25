@@ -42,7 +42,7 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
           <Row label="Sparandeintjäning" value={result.annualIncome.savingsIncome} indent />
         )}
         {result.annualIncome.crossSellingIncome > 0 && (
-          <Row label="Cross-selling" value={result.annualIncome.crossSellingIncome} indent />
+          <Row label="Övriga produktintäkter" value={result.annualIncome.crossSellingIncome} indent />
         )}
       </div>
       <div className="border-t" />
@@ -67,10 +67,10 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
           OH-kostnad: {fmt(-exp.overhead)} kr (aktivitetsbaserad)
         </summary>
         <div className="mt-1 pl-4 space-y-0.5 text-muted-foreground">
-          <div className="flex justify-between"><span>Ancillary</span><span className="font-mono">{fmt(-exp.ohBreakdown.ancillary)} kr</span></div>
-          <div className="flex justify-between"><span>Financing</span><span className="font-mono">{fmt(-exp.ohBreakdown.financing)} kr</span></div>
-          <div className="flex justify-between"><span>Exposure</span><span className="font-mono">{fmt(-exp.ohBreakdown.exposure)} kr</span></div>
-          <div className="flex justify-between"><span>Capital</span><span className="font-mono">{fmt(-exp.ohBreakdown.capital)} kr</span></div>
+          <div className="flex justify-between"><span>Övriga produktintäkter</span><span className="font-mono">{fmt(-exp.ohBreakdown.ancillary)} kr</span></div>
+          <div className="flex justify-between"><span>Finansiering</span><span className="font-mono">{fmt(-exp.ohBreakdown.financing)} kr</span></div>
+          <div className="flex justify-between"><span>Exponering/lånevolym</span><span className="font-mono">{fmt(-exp.ohBreakdown.exposure)} kr</span></div>
+          <div className="flex justify-between"><span>Allokerat kapital</span><span className="font-mono">{fmt(-exp.ohBreakdown.capital)} kr</span></div>
         </div>
       </details>
 
@@ -102,10 +102,10 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
       <Row label="Rörelseresultat" value={result.annualOperatingProfit} bold />
       <Row label="Skatt" value={-result.annualTax} indent />
       <Row label="Resultat efter skatt" value={result.annualProfitAfterTax} bold highlight />
-      <Row label="Kapitalkostnad (CoC)" value={-result.annualCapitalCharge} indent />
+      <Row label="Kapitalkostnad" value={-result.annualCapitalCharge} indent />
 
       <div className="border-t border-foreground/30" />
-      <Row label="Economic Profit (årlig)" value={result.annualEconomicProfit} bold highlight />
+      <Row label="Ekonomiskt resultat (årligt)" value={result.annualEconomicProfit} bold highlight />
 
       {/* One-time items */}
       <div className="border-t" />
@@ -127,16 +127,16 @@ export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
       <div className="border-t" />
       <div className="rounded-lg bg-primary/5 p-3 space-y-1">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          NPV ({result.npv.durationYears} år)
+          Nuvärde ({result.npv.durationYears} år)
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">Total NPV Economic Profit</span>
+          <span className="text-sm font-semibold">Totalt nuvärde ekonomiskt resultat</span>
           <span className={`font-mono text-lg font-bold ${result.npv.totalNPV < 0 ? 'text-signal-red' : 'text-foreground'}`}>
             {fmt(result.npv.totalNPV)} kr
           </span>
         </div>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Annualiserad EP</span>
+          <span>Annualiserat ekonomiskt resultat</span>
           <span className="font-mono">{fmt(result.npv.annualizedEP)} kr/år</span>
         </div>
       </div>

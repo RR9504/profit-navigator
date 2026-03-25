@@ -100,11 +100,11 @@ export function ScenarioPanel({ scenarios, currentResult, onLoad, onRemove, onSc
         <h4 className="section-header mb-2">Aktuellt resultat</h4>
         <div className="space-y-1 text-xs">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Economic Profit (år)</span>
+            <span className="text-muted-foreground">Ekon. resultat (år)</span>
             <span className="font-mono font-semibold">{Math.round(currentResult.annualEconomicProfit).toLocaleString('sv-SE')} kr</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">NPV ({currentResult.npv.durationYears} år)</span>
+            <span className="text-muted-foreground">Nuvärde ({currentResult.npv.durationYears} år)</span>
             <span className="font-mono font-semibold">{Math.round(currentResult.npv.totalNPV).toLocaleString('sv-SE')} kr</span>
           </div>
           <div className="flex justify-between">
