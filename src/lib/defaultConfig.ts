@@ -42,19 +42,22 @@ export const defaultConfig: AdminConfig = {
     { id: 'pension-avtal', name: 'Avtalspension', category: 'pension', discountBps: 3, annualIncomeContribution: 1600, internalSetupCost: 961, internalAnnualCost: 0, enabled: true },
 
     // --- Kort & Betalning ---
-    { id: 'card-maestro', name: 'Bankkort Maestro', category: 'payment', discountBps: 1, annualIncomeContribution: 400, internalSetupCost: 135, internalAnnualCost: 165, enabled: true },
-    { id: 'card-mastercard', name: 'Bankkort Mastercard', category: 'payment', discountBps: 2, annualIncomeContribution: 600, internalSetupCost: 135, internalAnnualCost: 165, enabled: true },
-    { id: 'card-visa', name: 'Bankkort Visa', category: 'payment', discountBps: 2, annualIncomeContribution: 700, internalSetupCost: 135, internalAnnualCost: 179, enabled: true },
-    { id: 'card-visa-ung', name: 'Bankkort Visa Ung', category: 'payment', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 135, internalAnnualCost: 179, enabled: true },
+    // Swedbank invoice: Mastercard 2.80 kr/kort/mån = 33.6 kr/år, Maestro 2.80 = 33.6, Visa inkl. KRES
+    { id: 'card-maestro', name: 'Bankkort Maestro', category: 'payment', discountBps: 1, annualIncomeContribution: 400, internalSetupCost: 135, internalAnnualCost: 199, enabled: true },
+    { id: 'card-mastercard', name: 'Bankkort Mastercard', category: 'payment', discountBps: 2, annualIncomeContribution: 600, internalSetupCost: 135, internalAnnualCost: 199, enabled: true },
+    { id: 'card-visa', name: 'Bankkort Visa', category: 'payment', discountBps: 2, annualIncomeContribution: 700, internalSetupCost: 135, internalAnnualCost: 213, enabled: true },
+    { id: 'card-visa-ung', name: 'Bankkort Visa Ung', category: 'payment', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 135, internalAnnualCost: 213, enabled: true },
 
     // --- Konto ---
-    { id: 'konto-transaktion', name: 'Transaktionskonto', category: 'account', discountBps: 0, annualIncomeContribution: 100, internalSetupCost: 143, internalAnnualCost: 218, enabled: true },
-    { id: 'konto-pmk', name: 'Penningmarknadskonto', category: 'account', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 188, internalAnnualCost: 349, enabled: true },
+    // Swedbank invoice: privatkonton 0.57 kr/konto/mån = 6.84 kr/år (+ KRES årskostnad)
+    { id: 'konto-transaktion', name: 'Transaktionskonto', category: 'account', discountBps: 0, annualIncomeContribution: 100, internalSetupCost: 143, internalAnnualCost: 225, enabled: true },
+    { id: 'konto-pmk', name: 'Penningmarknadskonto', category: 'account', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 188, internalAnnualCost: 356, enabled: true },
 
     // --- Digitalt ---
-    { id: 'internetbank', name: 'Internetbank/Mobilbank', category: 'digital', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 143, internalAnnualCost: 0, enabled: true },
-    { id: 'swish', name: 'Swish', category: 'digital', discountBps: 0, annualIncomeContribution: 50, internalSetupCost: 0, internalAnnualCost: 0, enabled: true },
-    { id: 'e-bokforing', name: 'e-bokföring', category: 'digital', discountBps: 0, annualIncomeContribution: 300, internalSetupCost: 666, internalAnnualCost: 0, enabled: false },
+    // Swedbank invoice: Bank-ID 1.83 kr/kund/mån = 22 kr/år, Swish 0.18-0.48/transaktion
+    { id: 'internetbank', name: 'Internetbank/Mobilbank', category: 'digital', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 143, internalAnnualCost: 22, enabled: true },
+    { id: 'swish', name: 'Swish', category: 'digital', discountBps: 0, annualIncomeContribution: 50, internalSetupCost: 0, internalAnnualCost: 40, enabled: true },
+    { id: 'e-bokforing', name: 'e-bokföring', category: 'digital', discountBps: 0, annualIncomeContribution: 300, internalSetupCost: 666, internalAnnualCost: 140, enabled: false },
 
     // --- Kredit ---
     { id: 'lanlofte', name: 'Lånelöfte', category: 'credit', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 1635, internalAnnualCost: 0, enabled: true },
@@ -123,12 +126,15 @@ export const defaultConfig: AdminConfig = {
     { minVolume: 5000000, maxVolume: 999999999, discountBps: 12 },
   ],
 
-  // OH distributed by activity (per 2022 framework)
+  // OH distributed by activity (calibrated against actual Swedbank invoice Nov 2024)
+  // Invoice total: ~1.29M kr/mån for 15,854 customers, 11,161 Mkr volume
+  // Per-kund items: ~640k/mån → ~484 kr/kund/år (captured via financing+capital rates)
+  // Per-volym items: ~320k/mån on 11,161 Mkr → ~0.034%/år (captured via exposureRate)
   ohModel: {
-    ancillaryRate: 15,    // % of ancillary income
-    financingRate: 8,     // % of financing income
-    exposureRate: 0.015,  // % of loan volume
-    capitalRate: 5,       // % of allocated capital
+    ancillaryRate: 10,     // % of ancillary income (product-related OH)
+    financingRate: 3,      // % of financing income (per-kund OH component)
+    exposureRate: 0.035,   // % of loan volume (risk, AML, IRB, reporting)
+    capitalRate: 3,        // % of allocated capital (capital management OH)
   },
 
   // Regulatory costs
