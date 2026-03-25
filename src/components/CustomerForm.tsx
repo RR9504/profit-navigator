@@ -291,16 +291,48 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
         )}
       </div>
 
-      {/* Products & services - with search */}
-      <div className="metric-card space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="section-header">Produkter & Tjänster</h3>
-          {activeCount > 0 && (
-            <span className="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded text-primary">
-              {activeCount} aktiva{totalDiscountBps > 0 && ` | -${(totalDiscountBps / 100).toFixed(2)}%`}
-            </span>
-          )}
+      {/* Active products list */}
+      {activeCount > 0 && (
+        <div className="metric-card space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="section-header">Aktiva produkter ({activeCount})</h3>
+            {totalDiscountBps > 0 && (
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-signal-green-bg" style={{ color: 'hsl(var(--signal-green))' }}>
+                -{(totalDiscountBps / 100).toFixed(2)}% rabatt
+              </span>
+            )}
+          </div>
+          <div className="space-y-0.5">
+            {config.crossSellingRules
+              .filter(r => input.activeProducts.includes(r.id))
+              .map(rule => (
+                <div key={rule.id} className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-1.5">
+                  <Checkbox checked onCheckedChange={() => toggleProduct(rule.id)} />
+                  <span className="text-sm font-medium flex-1 truncate">{rule.name}</span>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                    {rule.discountBps > 0 && (
+                      <span className="text-signal-green">-{(rule.discountBps / 100).toFixed(2)}%</span>
+                    )}
+                    {rule.annualIncomeContribution > 0 && (
+                      <span>+{formatSEK(rule.annualIncomeContribution)}/år</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => toggleProduct(rule.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors ml-1"
+                    aria-label="Ta bort"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+          </div>
         </div>
+      )}
+
+      {/* Products & services - search & add */}
+      <div className="metric-card space-y-3">
+        <h3 className="section-header">Lägg till produkter</h3>
 
         {/* Search */}
         <div className="relative">
@@ -340,31 +372,35 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
           })}
         </div>
 
-        {/* Product list */}
-        <div className="max-h-64 overflow-y-auto space-y-0.5">
-          {filteredProducts.map(rule => (
-            <label key={rule.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
-              <Checkbox
-                checked={input.activeProducts.includes(rule.id)}
-                onCheckedChange={() => toggleProduct(rule.id)}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium truncate">{rule.name}</span>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded shrink-0">
-                    {PRODUCT_CATEGORIES.find(c => c.key === rule.category)?.label}
-                  </span>
+        {/* Product list (excludes already active) */}
+        <div className="max-h-56 overflow-y-auto space-y-0.5">
+          {filteredProducts
+            .filter(rule => !input.activeProducts.includes(rule.id))
+            .map(rule => (
+              <label key={rule.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted">
+                <Checkbox
+                  checked={false}
+                  onCheckedChange={() => toggleProduct(rule.id)}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{rule.name}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded shrink-0">
+                      {PRODUCT_CATEGORIES.find(c => c.key === rule.category)?.label}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {rule.discountBps > 0 && <span className="text-signal-green">-{(rule.discountBps / 100).toFixed(2)}%</span>}
+                    {rule.discountBps > 0 && rule.annualIncomeContribution > 0 && ' · '}
+                    {rule.annualIncomeContribution > 0 && `+${formatSEK(rule.annualIncomeContribution)} kr/år`}
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {rule.discountBps > 0 && <span className="text-signal-green">-{(rule.discountBps / 100).toFixed(2)}%</span>}
-                  {rule.discountBps > 0 && rule.annualIncomeContribution > 0 && ' · '}
-                  {rule.annualIncomeContribution > 0 && `+${formatSEK(rule.annualIncomeContribution)} kr/år`}
-                </div>
-              </div>
-            </label>
-          ))}
-          {filteredProducts.length === 0 && (
-            <p className="text-center text-xs text-muted-foreground py-4">Inga produkter matchar sökningen</p>
+              </label>
+            ))}
+          {filteredProducts.filter(r => !input.activeProducts.includes(r.id)).length === 0 && (
+            <p className="text-center text-xs text-muted-foreground py-4">
+              {productSearch || categoryFilter !== 'all' ? 'Inga produkter matchar sökningen' : 'Alla produkter är tillagda'}
+            </p>
           )}
         </div>
       </div>
