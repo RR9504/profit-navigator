@@ -97,19 +97,22 @@ export function calculateProfitability(
   const ftpGreenDiscount = input.isGreenLoan ? config.regulatoryCosts.greenLoanFTPDiscount / 100 : 0;
   const effectiveFTPRate = ftpRate - ftpGreenDiscount;
 
-  // Auto discount from active cross-selling products
+  // Available discount from active cross-selling products
   const activeRules = config.crossSellingRules.filter(
     r => r.enabled && input.activeProducts.includes(r.id),
   );
-  const autoDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
-  const autoDiscount = autoDiscountBps / 100;
+  const maxProductDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
+  // Advisor chooses how much to actually give (0 to max)
+  const appliedProductDiscountBps = Math.min(input.appliedProductDiscountBps, maxProductDiscountBps);
+  const autoDiscount = appliedProductDiscountBps / 100;
 
   // Total savings volume across all entries
   const totalSavingsVolume = input.savings.reduce((sum, s) => sum + s.volume, 0);
-  const savingsDiscountBps = lookupSavingsDiscount(totalSavingsVolume, config.savingsDiscountTiers);
+  const maxSavingsDiscountBps = lookupSavingsDiscount(totalSavingsVolume, config.savingsDiscountTiers);
+  const savingsDiscountBps = input.applySavingsDiscount ? maxSavingsDiscountBps : 0;
   const savingsDiscount = savingsDiscountBps / 100;
 
-  // Effective rate = list - product discounts - savings discount + manual deviation
+  // Effective rate = list - applied product discount - savings discount + manual deviation
   const effectiveCustomerRate = Math.max(0, listRate - autoDiscount - savingsDiscount + input.rateDeviation);
   const spread = effectiveCustomerRate - effectiveFTPRate;
 
@@ -305,7 +308,8 @@ export function calculateProfitability(
   }
 
   return {
-    listRate, autoDiscount, savingsDiscount, rateDeviation: input.rateDeviation,
+    listRate, maxProductDiscountBps, appliedProductDiscountBps, autoDiscount,
+    maxSavingsDiscountBps, savingsDiscount, rateDeviation: input.rateDeviation,
     effectiveCustomerRate, ftpRate, ftpGreenDiscount, effectiveFTPRate, spread,
     ltvPercent, dtiPercent, riskWeightPercent, riskWeightedAssets, allocatedCapital,
     amortizationRate, monthlyAmortization,

@@ -34,7 +34,9 @@ const defaultInput: CustomerInput = {
   coBorrower: { enabled: false, monthlyIncome: 0 },
   numberOfChildren: 0,
   activeProducts: [],
+  appliedProductDiscountBps: 0,
   savings: [],
+  applySavingsDiscount: false,
   otherLoansMonthly: 0,
 };
 
@@ -66,21 +68,23 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
   const activeRules = config.crossSellingRules.filter(
     r => r.enabled && input.activeProducts.includes(r.id),
   );
-  const autoDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
-  const autoDiscount = autoDiscountBps / 100;
+  const maxProductDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
+  const appliedBps = Math.min(input.appliedProductDiscountBps, maxProductDiscountBps);
+  const appliedDiscount = appliedBps / 100;
 
   // Total savings and discount
   const totalSavingsVolume = useMemo(() => input.savings.reduce((sum, s) => sum + s.volume, 0), [input.savings]);
-  const savingsDiscountBps = useMemo(() => {
+  const maxSavingsDiscountBps = useMemo(() => {
     for (const tier of config.savingsDiscountTiers) {
       if (totalSavingsVolume >= tier.minVolume && totalSavingsVolume < tier.maxVolume)
         return tier.discountBps;
     }
     return 0;
   }, [totalSavingsVolume, config.savingsDiscountTiers]);
+  const savingsDiscountBps = input.applySavingsDiscount ? maxSavingsDiscountBps : 0;
   const savingsDiscount = savingsDiscountBps / 100;
 
-  const effectiveRate = Math.max(0, listRate - autoDiscount - savingsDiscount + input.rateDeviation);
+  const effectiveRate = Math.max(0, listRate - appliedDiscount - savingsDiscount + input.rateDeviation);
 
   // Filtered product list
   const filteredProducts = useMemo(() => {
@@ -96,7 +100,7 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
   }, [config.crossSellingRules, categoryFilter, productSearch]);
 
   const activeCount = input.activeProducts.length;
-  const totalDiscountBps = autoDiscountBps + savingsDiscountBps;
+  const totalDiscountBps = appliedBps + savingsDiscountBps;
 
   return (
     <div className="space-y-5">
@@ -172,10 +176,10 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
               <span>Listränta</span>
               <span className="font-mono">{listRate.toFixed(2)}%</span>
             </div>
-            {autoDiscount > 0 && (
+            {appliedBps > 0 && (
               <div className="flex justify-between" style={{ color: 'hsl(var(--signal-green))' }}>
-                <span>Produktrabatt ({autoDiscountBps} bps)</span>
-                <span className="font-mono">-{autoDiscount.toFixed(2)}%</span>
+                <span>Produktrabatt ({appliedBps} av {maxProductDiscountBps} bps)</span>
+                <span className="font-mono">-{appliedDiscount.toFixed(2)}%</span>
               </div>
             )}
             {savingsDiscount > 0 && (
@@ -186,7 +190,7 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
             )}
             {input.rateDeviation !== 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Manuell</span>
+                <span>Manuell justering</span>
                 <span className="font-mono">{input.rateDeviation >= 0 ? '+' : ''}{input.rateDeviation.toFixed(2)}%</span>
               </div>
             )}
@@ -195,6 +199,43 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
               <span className="font-mono">{effectiveRate.toFixed(2)}%</span>
             </div>
           </div>
+
+          {/* Product discount slider */}
+          {maxProductDiscountBps > 0 && (
+            <div className="rounded-lg border p-3 space-y-2 mt-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Produktrabatt att ge</Label>
+                <span className="text-xs font-mono font-semibold">
+                  {appliedBps} av {maxProductDiscountBps} bps
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={maxProductDiscountBps}
+                step={1}
+                value={[appliedBps]}
+                onValueChange={([v]) => update('appliedProductDiscountBps', v)}
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>0 bps (ingen rabatt)</span>
+                <span>{maxProductDiscountBps} bps (full rabatt)</span>
+              </div>
+            </div>
+          )}
+
+          {/* Savings discount toggle */}
+          {maxSavingsDiscountBps > 0 && (
+            <div className="flex items-center justify-between rounded-lg border p-3 mt-2">
+              <div>
+                <Label className="text-sm">Tillämpa sparanderabatt</Label>
+                <p className="text-xs text-muted-foreground">{maxSavingsDiscountBps} bps tillgängligt pga {formatSEK(totalSavingsVolume)} kr sparvolym</p>
+              </div>
+              <Switch
+                checked={input.applySavingsDiscount}
+                onCheckedChange={v => update('applySavingsDiscount', v)}
+              />
+            </div>
+          )}
         </div>
       </div>
 

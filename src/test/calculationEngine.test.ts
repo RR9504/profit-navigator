@@ -16,7 +16,9 @@ const baseInput: CustomerInput = {
   coBorrower: { enabled: false, monthlyIncome: 0 },
   numberOfChildren: 0,
   activeProducts: [],
+  appliedProductDiscountBps: 0,
   savings: [],
+  applySavingsDiscount: false,
   otherLoansMonthly: 0,
 };
 
@@ -182,11 +184,13 @@ describe('Children affect KALP', () => {
 });
 
 describe('Cross-selling products', () => {
-  it('active products give auto rate discount', () => {
-    const noProducts = calc();
-    const withProducts = calc({ activeProducts: ['salary', 'home-insurance-villa'] });
-    expect(withProducts.autoDiscount).toBeGreaterThan(0);
-    expect(withProducts.effectiveCustomerRate).toBeLessThan(noProducts.effectiveCustomerRate);
+  it('products give discount only when applied', () => {
+    const noDiscount = calc({ activeProducts: ['salary', 'home-insurance-villa'], appliedProductDiscountBps: 0 });
+    const withDiscount = calc({ activeProducts: ['salary', 'home-insurance-villa'], appliedProductDiscountBps: 15 });
+    expect(noDiscount.maxProductDiscountBps).toBe(15); // 10 + 5
+    expect(noDiscount.autoDiscount).toBe(0); // not applied
+    expect(withDiscount.autoDiscount).toBeGreaterThan(0);
+    expect(withDiscount.effectiveCustomerRate).toBeLessThan(noDiscount.effectiveCustomerRate);
   });
 
   it('active products generate cross-selling income', () => {
@@ -217,11 +221,13 @@ describe('Savings volume', () => {
     expect(noSavings.annualIncome.savingsIncome).toBe(0);
   });
 
-  it('savings volume gives rate discount at tiers', () => {
-    const small = calc({ savings: [{ id: '1', type: 'fund', volume: 50000 }] });
-    const large = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }] });
-    expect(large.savingsDiscount).toBeGreaterThan(small.savingsDiscount);
-    expect(large.effectiveCustomerRate).toBeLessThan(small.effectiveCustomerRate);
+  it('savings volume gives rate discount only when applied', () => {
+    const notApplied = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }], applySavingsDiscount: false });
+    const applied = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }], applySavingsDiscount: true });
+    expect(notApplied.maxSavingsDiscountBps).toBeGreaterThan(0);
+    expect(notApplied.savingsDiscount).toBe(0);
+    expect(applied.savingsDiscount).toBeGreaterThan(0);
+    expect(applied.effectiveCustomerRate).toBeLessThan(notApplied.effectiveCustomerRate);
   });
 
   it('fund margin = 0.80% on volume', () => {
@@ -230,12 +236,12 @@ describe('Savings volume', () => {
   });
 
   it('multiple savings entries sum up correctly', () => {
-    const single = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }] });
+    const single = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }], applySavingsDiscount: true });
     const multi = calc({ savings: [
       { id: '1', type: 'fund', volume: 500000 },
       { id: '2', type: 'isk', volume: 300000 },
       { id: '3', type: 'pension', volume: 200000 },
-    ] });
+    ], applySavingsDiscount: true });
     // Total volume = 1M in both → same discount tier
     expect(multi.savingsDiscount).toBe(single.savingsDiscount);
     // But income differs because different margins

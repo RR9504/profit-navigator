@@ -162,8 +162,10 @@ export interface CustomerInput {
   numberOfChildren: number;
 
   activeProducts: string[];
+  appliedProductDiscountBps: number;  // How much of available discount to actually give (0 = none)
 
   savings: SavingsEntry[];
+  applySavingsDiscount: boolean;      // Whether to apply savings-volume discount
 
   otherLoansMonthly: number;
 }
@@ -181,7 +183,10 @@ export interface StressScenario {
 
 export interface ProfitabilityResult {
   listRate: number;
-  autoDiscount: number;
+  maxProductDiscountBps: number;
+  appliedProductDiscountBps: number;
+  autoDiscount: number;             // Applied product discount in pp
+  maxSavingsDiscountBps: number;
   savingsDiscount: number;
   rateDeviation: number;
   effectiveCustomerRate: number;
