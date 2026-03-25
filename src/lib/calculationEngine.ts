@@ -104,8 +104,9 @@ export function calculateProfitability(
   const autoDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
   const autoDiscount = autoDiscountBps / 100;
 
-  // Savings volume discount
-  const savingsDiscountBps = lookupSavingsDiscount(input.savingsVolume, config.savingsDiscountTiers);
+  // Total savings volume across all entries
+  const totalSavingsVolume = input.savings.reduce((sum, s) => sum + s.volume, 0);
+  const savingsDiscountBps = lookupSavingsDiscount(totalSavingsVolume, config.savingsDiscountTiers);
   const savingsDiscount = savingsDiscountBps / 100;
 
   // Effective rate = list - product discounts - savings discount + manual deviation
@@ -174,9 +175,11 @@ export function calculateProfitability(
   const depositNetIncome = depositFTPIncome - depositGrossInterest;
 
   let savingsIncome = 0;
-  if (input.savingsType !== 'none' && input.savingsVolume > 0) {
-    const margin = config.savingsMargins.find(m => m.type === input.savingsType);
-    if (margin) savingsIncome = input.savingsVolume * (margin.marginPercent / 100);
+  for (const entry of input.savings) {
+    if (entry.volume > 0) {
+      const margin = config.savingsMargins.find(m => m.type === entry.type);
+      if (margin) savingsIncome += entry.volume * (margin.marginPercent / 100);
+    }
   }
 
   const crossSellingIncome = activeRules.reduce((sum, r) => sum + r.annualIncomeContribution, 0);
@@ -342,9 +345,10 @@ export function suggestOptimization(
     suggestions.push('Löneinbetalning ökar inlåningsvolymen och ger bättre FTP-intjäning.');
   }
 
-  if (input.savingsVolume > 0) {
-    const currentBps = lookupSavingsDiscount(input.savingsVolume, config.savingsDiscountTiers);
-    const nextTier = config.savingsDiscountTiers.find(t => t.minVolume > input.savingsVolume && t.discountBps > currentBps);
+  const totalSavings = input.savings.reduce((sum, s) => sum + s.volume, 0);
+  if (totalSavings > 0) {
+    const currentBps = lookupSavingsDiscount(totalSavings, config.savingsDiscountTiers);
+    const nextTier = config.savingsDiscountTiers.find(t => t.minVolume > totalSavings && t.discountBps > currentBps);
     if (nextTier) {
       suggestions.push(
         `Öka sparvolymen till ${(nextTier.minVolume / 1000).toFixed(0)}k kr för ytterligare ${nextTier.discountBps - currentBps} bps ränterabatt.`

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { CustomerInput, AdminConfig, ProductCategory } from '@/lib/types';
+import type { CustomerInput, AdminConfig, ProductCategory, SavingsType } from '@/lib/types';
 import { BINDING_PERIODS, PRODUCT_CATEGORIES } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Save, RotateCcw, UserPlus, Search, Leaf } from 'lucide-react';
+import { Save, RotateCcw, UserPlus, Search, Leaf, Plus, Trash2 } from 'lucide-react';
 
 interface CustomerFormProps {
   input: CustomerInput;
@@ -34,9 +34,15 @@ const defaultInput: CustomerInput = {
   coBorrower: { enabled: false, monthlyIncome: 0 },
   numberOfChildren: 0,
   activeProducts: [],
-  savingsVolume: 0,
-  savingsType: 'none',
+  savings: [],
   otherLoansMonthly: 0,
+};
+
+const SAVINGS_TYPE_LABELS: Record<SavingsType, string> = {
+  fund: 'Fond',
+  isk: 'ISK',
+  deposit: 'Sparkonto',
+  pension: 'Pension',
 };
 
 export { defaultInput };
@@ -63,14 +69,15 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
   const autoDiscountBps = activeRules.reduce((sum, r) => sum + r.discountBps, 0);
   const autoDiscount = autoDiscountBps / 100;
 
-  // Savings discount
+  // Total savings and discount
+  const totalSavingsVolume = useMemo(() => input.savings.reduce((sum, s) => sum + s.volume, 0), [input.savings]);
   const savingsDiscountBps = useMemo(() => {
     for (const tier of config.savingsDiscountTiers) {
-      if (input.savingsVolume >= tier.minVolume && input.savingsVolume < tier.maxVolume)
+      if (totalSavingsVolume >= tier.minVolume && totalSavingsVolume < tier.maxVolume)
         return tier.discountBps;
     }
     return 0;
-  }, [input.savingsVolume, config.savingsDiscountTiers]);
+  }, [totalSavingsVolume, config.savingsDiscountTiers]);
   const savingsDiscount = savingsDiscountBps / 100;
 
   const effectiveRate = Math.max(0, listRate - autoDiscount - savingsDiscount + input.rateDeviation);
@@ -250,43 +257,68 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
 
       {/* Savings */}
       <div className="metric-card space-y-4">
-        <h3 className="section-header">Sparande</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs text-muted-foreground">Sparvolym (SEK)</Label>
-            <Input type="number" min={0} value={input.savingsVolume}
-              onChange={e => update('savingsVolume', Math.max(0, Number(e.target.value)))}
-              className="font-mono" />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Spartyp</Label>
-            <Select value={input.savingsType} onValueChange={v => update('savingsType', v as CustomerInput['savingsType'])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Inget</SelectItem>
-                <SelectItem value="fund">Fond</SelectItem>
-                <SelectItem value="isk">ISK</SelectItem>
-                <SelectItem value="deposit">Sparkonto</SelectItem>
-                <SelectItem value="pension">Pension</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex items-center justify-between">
+          <h3 className="section-header">Sparande</h3>
+          {totalSavingsVolume > 0 && (
+            <span className="text-xs font-mono text-muted-foreground">
+              Totalt: {formatSEK(totalSavingsVolume)} kr
+            </span>
+          )}
         </div>
-        {input.savingsVolume > 0 && (
-          <div className="space-y-1">
-            {input.savingsType !== 'none' && (
-              <div className="rounded bg-muted px-3 py-2 text-xs text-muted-foreground">
-                Marginalintäkt: {(() => {
-                  const m = config.savingsMargins.find(s => s.type === input.savingsType);
-                  return m ? `${formatSEK(Math.round(input.savingsVolume * m.marginPercent / 100))} kr/år` : '—';
-                })()}
+
+        {/* List of savings entries */}
+        {input.savings.map((entry, i) => {
+          const margin = config.savingsMargins.find(m => m.type === entry.type);
+          const income = margin && entry.volume > 0 ? Math.round(entry.volume * margin.marginPercent / 100) : 0;
+          return (
+            <div key={entry.id} className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">Typ</Label>
+                <Select value={entry.type} onValueChange={v => {
+                  const next = [...input.savings];
+                  next[i] = { ...next[i], type: v as SavingsType };
+                  onChange({ ...input, savings: next });
+                }}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fund">Fond</SelectItem>
+                    <SelectItem value="isk">ISK</SelectItem>
+                    <SelectItem value="deposit">Sparkonto</SelectItem>
+                    <SelectItem value="pension">Pension</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-            {savingsDiscountBps > 0 && (
-              <div className="rounded px-3 py-2 text-xs font-medium bg-signal-green-bg" style={{ color: 'hsl(var(--signal-green))' }}>
-                Sparanderabatt: -{savingsDiscount.toFixed(2)}% ({savingsDiscountBps} bps) pga {formatSEK(input.savingsVolume)} kr sparvolym
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">Volym (SEK)</Label>
+                <Input type="number" min={0} value={entry.volume}
+                  onChange={e => {
+                    const next = [...input.savings];
+                    next[i] = { ...next[i], volume: Math.max(0, Number(e.target.value)) };
+                    onChange({ ...input, savings: next });
+                  }}
+                  className="font-mono h-9" />
               </div>
-            )}
+              <div className="shrink-0 text-right w-20">
+                {income > 0 && (
+                  <span className="text-xs text-muted-foreground font-mono">+{formatSEK(income)}/år</span>
+                )}
+              </div>
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive"
+                onClick={() => onChange({ ...input, savings: input.savings.filter((_, j) => j !== i) })}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          );
+        })}
+
+        <Button variant="outline" size="sm" className="w-full"
+          onClick={() => onChange({ ...input, savings: [...input.savings, { id: crypto.randomUUID(), type: 'fund', volume: 0 }] })}>
+          <Plus className="mr-2 h-3.5 w-3.5" /> Lägg till sparande
+        </Button>
+
+        {savingsDiscountBps > 0 && (
+          <div className="rounded px-3 py-2 text-xs font-medium bg-signal-green-bg" style={{ color: 'hsl(var(--signal-green))' }}>
+            Sparanderabatt: -{savingsDiscount.toFixed(2)}% ({savingsDiscountBps} bps) pga {formatSEK(totalSavingsVolume)} kr total sparvolym
           </div>
         )}
       </div>

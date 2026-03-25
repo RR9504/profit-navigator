@@ -16,8 +16,7 @@ const baseInput: CustomerInput = {
   coBorrower: { enabled: false, monthlyIncome: 0 },
   numberOfChildren: 0,
   activeProducts: [],
-  savingsVolume: 0,
-  savingsType: 'none',
+  savings: [],
   otherLoansMonthly: 0,
 };
 
@@ -213,21 +212,36 @@ describe('Cross-selling products', () => {
 describe('Savings volume', () => {
   it('savings volume generates margin income', () => {
     const noSavings = calc();
-    const withSavings = calc({ savingsVolume: 500000, savingsType: 'fund' });
+    const withSavings = calc({ savings: [{ id: '1', type: 'fund', volume: 500000 }] });
     expect(withSavings.annualIncome.savingsIncome).toBeGreaterThan(0);
     expect(noSavings.annualIncome.savingsIncome).toBe(0);
   });
 
   it('savings volume gives rate discount at tiers', () => {
-    const small = calc({ savingsVolume: 50000 });
-    const large = calc({ savingsVolume: 1000000 });
+    const small = calc({ savings: [{ id: '1', type: 'fund', volume: 50000 }] });
+    const large = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }] });
     expect(large.savingsDiscount).toBeGreaterThan(small.savingsDiscount);
     expect(large.effectiveCustomerRate).toBeLessThan(small.effectiveCustomerRate);
   });
 
   it('fund margin = 0.80% on volume', () => {
-    const r = calc({ savingsVolume: 1000000, savingsType: 'fund' });
+    const r = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }] });
     expect(r.annualIncome.savingsIncome).toBeCloseTo(8000, 0);
+  });
+
+  it('multiple savings entries sum up correctly', () => {
+    const single = calc({ savings: [{ id: '1', type: 'fund', volume: 1000000 }] });
+    const multi = calc({ savings: [
+      { id: '1', type: 'fund', volume: 500000 },
+      { id: '2', type: 'isk', volume: 300000 },
+      { id: '3', type: 'pension', volume: 200000 },
+    ] });
+    // Total volume = 1M in both → same discount tier
+    expect(multi.savingsDiscount).toBe(single.savingsDiscount);
+    // But income differs because different margins
+    expect(multi.annualIncome.savingsIncome).toBeGreaterThan(0);
+    // fund 500k×0.80% + isk 300k×0.30% + pension 200k×0.60% = 4000+900+1200 = 6100
+    expect(multi.annualIncome.savingsIncome).toBeCloseTo(6100, 0);
   });
 });
 

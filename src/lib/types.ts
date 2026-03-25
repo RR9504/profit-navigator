@@ -138,6 +138,14 @@ export interface CoBorrower {
   monthlyIncome: number;
 }
 
+export type SavingsType = 'fund' | 'isk' | 'deposit' | 'pension';
+
+export interface SavingsEntry {
+  id: string;
+  type: SavingsType;
+  volume: number;
+}
+
 export interface CustomerInput {
   loanAmount: number;
   propertyValue: number;
@@ -155,8 +163,7 @@ export interface CustomerInput {
 
   activeProducts: string[];
 
-  savingsVolume: number;
-  savingsType: 'fund' | 'isk' | 'deposit' | 'pension' | 'none';
+  savings: SavingsEntry[];
 
   otherLoansMonthly: number;
 }
