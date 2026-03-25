@@ -18,76 +18,135 @@ function Row({ label, value, indent = false, bold = false, highlight = false }: 
 }
 
 export function ProfitBreakdown({ result }: { result: ProfitabilityResult }) {
+  const { annualExpenses: exp } = result;
+
   return (
     <div className="metric-card space-y-4">
       <h3 className="section-header">Resultaträkning (Årsbasis)</h3>
 
-      {/* Financing Income */}
+      {/* Income */}
       <div>
-        <Row label="Finansieringsintäkt" value={result.financingIncome.total} bold />
-        <Row label="Ränteintäkt (brutto)" value={result.financingIncome.grossInterestIncome} indent />
-        <Row label="FTP-kostnad" value={result.financingIncome.ftpCost} indent />
-        <Row label="Uppläggningsavgift" value={result.financingIncome.arrangementFee} indent />
-        <Row label="Equity FTP" value={result.financingIncome.equityFTP} indent />
+        <Row label="Räntenetto" value={result.annualIncome.netInterestIncome} bold />
+        <Row label="Equity FTP" value={result.annualIncome.equityFTP} indent />
+        <Row label="Inlåningsintjäning" value={result.annualIncome.depositNetIncome} indent />
+        {result.annualIncome.savingsIncome > 0 && (
+          <Row label="Sparandeintjäning" value={result.annualIncome.savingsIncome} indent />
+        )}
+        {result.annualIncome.crossSellingIncome > 0 && (
+          <Row label="Cross-selling" value={result.annualIncome.crossSellingIncome} indent />
+        )}
       </div>
-
       <div className="border-t" />
-
-      {/* Deposit Income */}
-      <div>
-        <Row label="Inlåningsintäkt" value={result.depositIncome.total} bold />
-        <Row label="Ränta till kund" value={result.depositIncome.grossInterest} indent />
-        <Row label="FTP inlåning" value={result.depositIncome.ftpIncome} indent />
-      </div>
-
-      <div className="border-t" />
-
-      {/* Ancillary */}
-      <div>
-        <Row label="Övriga intäkter (cross-selling)" value={result.ancillaryIncome.total} bold />
-      </div>
-
-      <div className="border-t" />
-
-      <Row label="Total intäkt" value={result.totalIncome} bold highlight />
+      <Row label="Totala årliga intäkter" value={result.annualIncome.total} bold highlight />
 
       <div className="border-t" />
 
       {/* Expenses */}
       <div>
-        <Row label="Totala kostnader" value={-result.totalExpenses.total} bold />
-        <Row label="Distributions-/uppläggskostnad" value={-result.totalExpenses.distributionCost} indent />
-        <Row label="Produktkostnader" value={-result.totalExpenses.productCosts} indent />
-        <Row label="Overhead" value={-result.totalExpenses.overheadCosts} indent />
+        <Row label="Årliga kostnader" value={-exp.total} bold />
+        <Row label="Kreditkostnad (lånetyp)" value={-exp.loanAnnualCost} indent />
+        <Row label="Fast kundkostnad" value={-exp.customerCost} indent />
+        <Row label="Rådgivningskostnad" value={-exp.advisoryCost} indent />
+        {exp.productInternalCosts > 0 && (
+          <Row label="Produktkostnader (KRES)" value={-exp.productInternalCosts} indent />
+        )}
+      </div>
+
+      {/* OH breakdown */}
+      <details className="text-xs">
+        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+          OH-kostnad: {fmt(-exp.overhead)} kr (aktivitetsbaserad)
+        </summary>
+        <div className="mt-1 pl-4 space-y-0.5 text-muted-foreground">
+          <div className="flex justify-between"><span>Ancillary</span><span className="font-mono">{fmt(-exp.ohBreakdown.ancillary)} kr</span></div>
+          <div className="flex justify-between"><span>Financing</span><span className="font-mono">{fmt(-exp.ohBreakdown.financing)} kr</span></div>
+          <div className="flex justify-between"><span>Exposure</span><span className="font-mono">{fmt(-exp.ohBreakdown.exposure)} kr</span></div>
+          <div className="flex justify-between"><span>Capital</span><span className="font-mono">{fmt(-exp.ohBreakdown.capital)} kr</span></div>
+        </div>
+      </details>
+
+      {/* Regulatory costs */}
+      {exp.regulatoryCosts.total > 0 && (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+            Regulatoriska kostnader: {fmt(-exp.regulatoryCosts.total)} kr
+          </summary>
+          <div className="mt-1 pl-4 space-y-0.5 text-muted-foreground">
+            <div className="flex justify-between"><span>Insättningsgaranti</span><span className="font-mono">{fmt(-exp.regulatoryCosts.depositInsurance)} kr</span></div>
+            <div className="flex justify-between"><span>Bankskatt utlåning</span><span className="font-mono">{fmt(-exp.regulatoryCosts.bankTaxLending)} kr</span></div>
+            <div className="flex justify-between"><span>Bankskatt inlåning</span><span className="font-mono">{fmt(-exp.regulatoryCosts.bankTaxDeposit)} kr</span></div>
+            <div className="flex justify-between"><span>Resolutionsfond</span><span className="font-mono">{fmt(-exp.regulatoryCosts.resolutionFund)} kr</span></div>
+          </div>
+        </details>
+      )}
+
+      <div className="border-t" />
+
+      {/* Expected loss */}
+      <Row label="Förväntad förlust (EL)" value={-result.expectedLoss.annualEL} bold />
+      <div className="pl-4 text-xs text-muted-foreground">
+        PD: {result.expectedLoss.adjustedPD.toFixed(3)}% · LGD: {result.expectedLoss.lgd.toFixed(1)}% · EAD: {fmt(result.expectedLoss.ead)} kr
       </div>
 
       <div className="border-t" />
 
-      <Row label="Rörelseresultat före skatt" value={result.operatingProfitBeforeTax} bold />
-      <Row label="Förväntad förlust (EL)" value={-result.expectedLoss} indent />
-      <Row label="Skatt" value={-result.taxCharge} indent />
-      <Row label="Rörelseresultat efter skatt" value={result.operatingProfitAfterTax} bold highlight />
-      <Row label="Kapitalkostnad" value={-result.costOfCapital} indent />
+      <Row label="Rörelseresultat" value={result.annualOperatingProfit} bold />
+      <Row label="Skatt" value={-result.annualTax} indent />
+      <Row label="Resultat efter skatt" value={result.annualProfitAfterTax} bold highlight />
+      <Row label="Kapitalkostnad (CoC)" value={-result.annualCapitalCharge} indent />
 
       <div className="border-t border-foreground/30" />
+      <Row label="Economic Profit (årlig)" value={result.annualEconomicProfit} bold highlight />
 
-      <Row label="Economic Profit" value={result.economicProfit} bold highlight />
+      {/* One-time items */}
+      <div className="border-t" />
+      <details className="text-xs">
+        <summary className="cursor-pointer font-semibold text-muted-foreground hover:text-foreground">
+          Engångsposter (netto: {fmt(result.oneTimeItems.netUpfront - result.oneTimeItems.closingCost)} kr)
+        </summary>
+        <div className="mt-1 space-y-0.5">
+          <Row label="Uppläggningsavgift (kund)" value={result.oneTimeItems.arrangementFee} indent />
+          <Row label="Uppläggskostnad (intern)" value={-result.oneTimeItems.setupCost} indent />
+          {result.oneTimeItems.productSetupCosts > 0 && (
+            <Row label="Produktupplägg (KRES)" value={-result.oneTimeItems.productSetupCosts} indent />
+          )}
+          <Row label="Avslutskostnad" value={-result.oneTimeItems.closingCost} indent />
+        </div>
+      </details>
+
+      {/* NPV */}
+      <div className="border-t" />
+      <div className="rounded-lg bg-primary/5 p-3 space-y-1">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          NPV ({result.npv.durationYears} år)
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">Total NPV Economic Profit</span>
+          <span className={`font-mono text-lg font-bold ${result.npv.totalNPV < 0 ? 'text-signal-red' : 'text-foreground'}`}>
+            {fmt(result.npv.totalNPV)} kr
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Annualiserad EP</span>
+          <span className="font-mono">{fmt(result.npv.annualizedEP)} kr/år</span>
+        </div>
+      </div>
 
       {/* KPIs */}
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <KPI label="Nettomarginal" value={`${result.netMarginPercent.toFixed(2)}%`} />
-        <KPI label="Avkastning kapital" value={`${result.returnOnCapital.toFixed(1)}%`} />
-        <KPI label="K/I-tal" value={`${result.costIncomeRatio.toFixed(1)}%`} />
+        <KPI label="Nettomarginal" value={`${result.netMarginPercent.toFixed(2)}%`} warn={result.netMarginPercent < 0.15} />
+        <KPI label="RAROC" value={`${result.returnOnCapital.toFixed(1)}%`} />
+        <KPI label="K/I-tal" value={`${result.costIncomeRatio.toFixed(1)}%`} warn={result.costIncomeRatio > 60} />
       </div>
     </div>
   );
 }
 
-function KPI({ label, value }: { label: string; value: string }) {
+function KPI({ label, value, warn = false }: { label: string; value: string; warn?: boolean }) {
   return (
-    <div className="rounded-lg bg-muted p-3 text-center">
+    <div className={`rounded-lg p-3 text-center ${warn ? 'bg-signal-red-bg' : 'bg-muted'}`}>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-lg font-semibold text-foreground">{value}</div>
+      <div className={`mt-1 font-mono text-lg font-semibold ${warn ? 'text-signal-red' : 'text-foreground'}`}>{value}</div>
     </div>
   );
 }

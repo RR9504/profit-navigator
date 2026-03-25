@@ -1,32 +1,20 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { CustomerInput, ProfitabilityResult, Scenario, AdminConfig } from '@/lib/types';
-import { BINDING_PERIODS } from '@/lib/types';
+import type { CustomerInput, Scenario, AdminConfig } from '@/lib/types';
 import { calculateProfitability, suggestOptimization } from '@/lib/calculationEngine';
 import { loadConfig } from '@/lib/configStore';
 import { SignalIndicator } from '@/components/SignalIndicator';
 import { ProfitBreakdown } from '@/components/ProfitBreakdown';
-import { CustomerForm } from '@/components/CustomerForm';
-import { ScenarioPanel } from '@/components/ScenarioPanel';
+import { CustomerForm, defaultInput } from '@/components/CustomerForm';
+import { ScenarioPanel, loadSavedScenarios } from '@/components/ScenarioPanel';
 import { OptimizationSuggestions } from '@/components/OptimizationSuggestions';
 import { RateOverview } from '@/components/RateOverview';
-
-const defaultInput: CustomerInput = {
-  loanAmount: 2500000,
-  propertyValue: 3500000,
-  bindingPeriod: '3m',
-  rateDeviation: 0,
-  monthlyIncome: 50000,
-  salaryDeposit: false,
-  depositBalance: 100000,
-  activeProducts: [],
-  savingsVolume: 0,
-  savingsType: 'none',
-};
+import { KALPDisplay } from '@/components/KALPDisplay';
+import { StressTestDisplay } from '@/components/StressTestDisplay';
 
 export default function AdvisorPage() {
   const [config] = useState<AdminConfig>(loadConfig);
   const [input, setInput] = useState<CustomerInput>(defaultInput);
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [scenarios, setScenarios] = useState<Scenario[]>(loadSavedScenarios);
 
   const result = useMemo(() => calculateProfitability(input, config), [input, config]);
   const suggestions = useMemo(() => suggestOptimization(input, config), [input, config]);
@@ -35,6 +23,7 @@ export default function AdvisorPage() {
     const scenario: Scenario = {
       id: crypto.randomUUID(),
       name: `Scenario ${scenarios.length + 1}`,
+      timestamp: Date.now(),
       input: { ...input },
       result,
     };
@@ -57,7 +46,7 @@ export default function AdvisorPage() {
           <div className="flex items-center gap-4">
             <SignalIndicator signal={result.signal} message={result.signalMessage} size="lg" />
             <a href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Admin ⚙
+              Admin
             </a>
           </div>
         </div>
@@ -74,6 +63,8 @@ export default function AdvisorPage() {
           <div className="space-y-6 lg:col-span-5">
             <RateOverview result={result} config={config} input={input} />
             <ProfitBreakdown result={result} />
+            <KALPDisplay result={result} />
+            <StressTestDisplay result={result} />
             <OptimizationSuggestions suggestions={suggestions} />
           </div>
 
@@ -84,6 +75,7 @@ export default function AdvisorPage() {
               currentResult={result}
               onLoad={loadScenario}
               onRemove={(id) => setScenarios(prev => prev.filter(s => s.id !== id))}
+              onScenariosChange={setScenarios}
             />
           </div>
         </div>
