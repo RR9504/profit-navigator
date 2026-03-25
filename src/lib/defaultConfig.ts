@@ -55,7 +55,8 @@ export const defaultConfig: AdminConfig = {
 
     // --- Digitalt ---
     // Swedbank invoice: Bank-ID 1.83 kr/kund/mån = 22 kr/år, Swish 0.18-0.48/transaktion
-    { id: 'internetbank', name: 'Internetbank/Mobilbank', category: 'digital', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 143, internalAnnualCost: 22, enabled: true },
+    { id: 'internetbank', name: 'Internetbank/Mobilbank', category: 'digital', discountBps: 0, annualIncomeContribution: 200, internalSetupCost: 143, internalAnnualCost: 0, enabled: true },
+    { id: 'bankid', name: 'Bank-ID', category: 'digital', discountBps: 0, annualIncomeContribution: 0, internalSetupCost: 0, internalAnnualCost: 22, enabled: true },
     { id: 'swish', name: 'Swish', category: 'digital', discountBps: 0, annualIncomeContribution: 50, internalSetupCost: 0, internalAnnualCost: 40, enabled: true },
     { id: 'e-bokforing', name: 'e-bokföring', category: 'digital', discountBps: 0, annualIncomeContribution: 300, internalSetupCost: 666, internalAnnualCost: 140, enabled: false },
 

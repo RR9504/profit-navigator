@@ -193,8 +193,8 @@ export default function AdminPage() {
                         <td className="py-1 font-medium">{rule.name}</td>
                         <td className="py-1"><Input type="number" step="1" value={rule.discountBps} onChange={e => updateRule(rule.id, 'discountBps', Number(e.target.value))} className="ml-auto w-16 text-right font-mono" /></td>
                         <td className="py-1"><Input type="number" step="100" value={rule.annualIncomeContribution} onChange={e => updateRule(rule.id, 'annualIncomeContribution', Number(e.target.value))} className="ml-auto w-20 text-right font-mono" /></td>
-                        <td className="py-1 text-right font-mono text-muted-foreground">{rule.internalSetupCost} kr</td>
-                        <td className="py-1 text-right font-mono text-muted-foreground">{rule.internalAnnualCost} kr</td>
+                        <td className="py-1"><Input type="number" step="1" value={rule.internalSetupCost} onChange={e => updateRule(rule.id, 'internalSetupCost', Number(e.target.value))} className="ml-auto w-20 text-right font-mono" /></td>
+                        <td className="py-1"><Input type="number" step="1" value={rule.internalAnnualCost} onChange={e => updateRule(rule.id, 'internalAnnualCost', Number(e.target.value))} className="ml-auto w-20 text-right font-mono" /></td>
                       </tr>
                     ))}
                   </tbody>
