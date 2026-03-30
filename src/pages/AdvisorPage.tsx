@@ -10,15 +10,23 @@ import { OptimizationSuggestions } from '@/components/OptimizationSuggestions';
 import { RateOverview } from '@/components/RateOverview';
 import { KALPDisplay } from '@/components/KALPDisplay';
 import { StressTestDisplay } from '@/components/StressTestDisplay';
+import { SimpleResultView } from '@/components/SimpleResultView';
+
+type ViewMode = 'simple' | 'detailed';
 
 export default function AdvisorPage() {
   const [config, setConfig] = useState<AdminConfig>(loadConfig);
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    (localStorage.getItem('advisor-view-mode') as ViewMode) || 'simple'
+  );
 
-  // Reload config when window regains focus (e.g. after admin changes)
+  useEffect(() => {
+    localStorage.setItem('advisor-view-mode', viewMode);
+  }, [viewMode]);
+
   useEffect(() => {
     const onFocus = () => setConfig(loadConfig());
     window.addEventListener('focus', onFocus);
-    // Also reload on visibility change (tab switching)
     const onVisible = () => { if (document.visibilityState === 'visible') setConfig(loadConfig()); };
     document.addEventListener('visibilitychange', onVisible);
     return () => {
@@ -26,6 +34,7 @@ export default function AdvisorPage() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
+
   const [input, setInput] = useState<CustomerInput>(defaultInput);
   const [scenarios, setScenarios] = useState<Scenario[]>(loadSavedScenarios);
 
@@ -57,6 +66,25 @@ export default function AdvisorPage() {
             <p className="text-sm text-muted-foreground">Prissättningsstöd — Sparbanken</p>
           </div>
           <div className="flex items-center gap-4">
+            {/* View mode toggle */}
+            <div className="flex rounded-lg border bg-muted p-0.5">
+              <button
+                onClick={() => setViewMode('simple')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  viewMode === 'simple' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Kundvy
+              </button>
+              <button
+                onClick={() => setViewMode('detailed')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  viewMode === 'detailed' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Internvy
+              </button>
+            </div>
             <SignalIndicator signal={result.signal} message={result.signalMessage} size="lg" />
             <a href="/portfolio" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Portfölj
@@ -72,32 +100,59 @@ export default function AdvisorPage() {
       </header>
 
       <div className="mx-auto max-w-[1600px] p-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left: Input */}
-          <div className="space-y-6 lg:col-span-4">
-            <CustomerForm input={input} onChange={setInput} config={config} onSaveScenario={saveScenario} />
-          </div>
+        {viewMode === 'simple' ? (
+          /* === KUNDVY === */
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* Left: Input (simplified - same form) */}
+            <div className="space-y-6 lg:col-span-5">
+              <CustomerForm input={input} onChange={setInput} config={config} onSaveScenario={saveScenario} />
+            </div>
 
-          {/* Center: Results */}
-          <div className="space-y-6 lg:col-span-5">
-            <RateOverview result={result} config={config} input={input} />
-            <ProfitBreakdown result={result} />
-            <KALPDisplay result={result} />
-            <StressTestDisplay result={result} />
-            <OptimizationSuggestions suggestions={suggestions} />
-          </div>
+            {/* Right: Simple results */}
+            <div className="space-y-6 lg:col-span-4">
+              <SimpleResultView result={result} input={input} />
+            </div>
 
-          {/* Right: Scenarios */}
-          <div className="lg:col-span-3">
-            <ScenarioPanel
-              scenarios={scenarios}
-              currentResult={result}
-              onLoad={loadScenario}
-              onRemove={(id) => setScenarios(prev => prev.filter(s => s.id !== id))}
-              onScenariosChange={setScenarios}
-            />
+            {/* Scenarios - narrow */}
+            <div className="lg:col-span-3">
+              <ScenarioPanel
+                scenarios={scenarios}
+                currentResult={result}
+                onLoad={loadScenario}
+                onRemove={(id) => setScenarios(prev => prev.filter(s => s.id !== id))}
+                onScenariosChange={setScenarios}
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          /* === INTERNVY === */
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* Left: Input */}
+            <div className="space-y-6 lg:col-span-4">
+              <CustomerForm input={input} onChange={setInput} config={config} onSaveScenario={saveScenario} />
+            </div>
+
+            {/* Center: Full results */}
+            <div className="space-y-6 lg:col-span-5">
+              <RateOverview result={result} config={config} input={input} />
+              <ProfitBreakdown result={result} />
+              <KALPDisplay result={result} />
+              <StressTestDisplay result={result} />
+              <OptimizationSuggestions suggestions={suggestions} />
+            </div>
+
+            {/* Right: Scenarios */}
+            <div className="lg:col-span-3">
+              <ScenarioPanel
+                scenarios={scenarios}
+                currentResult={result}
+                onLoad={loadScenario}
+                onRemove={(id) => setScenarios(prev => prev.filter(s => s.id !== id))}
+                onScenariosChange={setScenarios}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
