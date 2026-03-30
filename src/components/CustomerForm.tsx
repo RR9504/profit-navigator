@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { CustomerInput, AdminConfig, ProductCategory, SavingsType } from '@/lib/types';
 import { BINDING_PERIODS, PRODUCT_CATEGORIES } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -110,16 +111,12 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs text-muted-foreground">Lånebelopp (SEK)</Label>
-            <Input type="number" min={0} value={input.loanAmount}
-              onChange={e => update('loanAmount', Math.max(0, Number(e.target.value)))}
-              className="font-mono" />
+            <Label className="text-xs text-muted-foreground">Lånebelopp</Label>
+            <NumberInput value={input.loanAmount} onChange={v => update('loanAmount', v)} suffix="kr" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Marknadsvärde (SEK)</Label>
-            <Input type="number" min={0} value={input.propertyValue}
-              onChange={e => update('propertyValue', Math.max(0, Number(e.target.value)))}
-              className="font-mono" />
+            <Label className="text-xs text-muted-foreground">Marknadsvärde</Label>
+            <NumberInput value={input.propertyValue} onChange={v => update('propertyValue', v)} suffix="kr" />
           </div>
         </div>
 
@@ -244,16 +241,12 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
         <h3 className="section-header">Kundens ekonomi</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs text-muted-foreground">Månadsinkomst (SEK)</Label>
-            <Input type="number" min={0} value={input.monthlyIncome}
-              onChange={e => update('monthlyIncome', Math.max(0, Number(e.target.value)))}
-              className="font-mono" />
+            <Label className="text-xs text-muted-foreground">Månadsinkomst</Label>
+            <NumberInput value={input.monthlyIncome} onChange={v => update('monthlyIncome', v)} suffix="kr" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Inlåningssaldo (SEK)</Label>
-            <Input type="number" min={0} value={input.depositBalance}
-              onChange={e => update('depositBalance', Math.max(0, Number(e.target.value)))}
-              className="font-mono" />
+            <Label className="text-xs text-muted-foreground">Inlåningssaldo</Label>
+            <NumberInput value={input.depositBalance} onChange={v => update('depositBalance', v)} suffix="kr" />
           </div>
         </div>
 
@@ -263,10 +256,8 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground">Övriga lånekostnader (kr/mån)</Label>
-          <Input type="number" min={0} value={input.otherLoansMonthly}
-            onChange={e => update('otherLoansMonthly', Math.max(0, Number(e.target.value)))}
-            className="font-mono" />
+          <Label className="text-xs text-muted-foreground">Övriga lånekostnader</Label>
+          <NumberInput value={input.otherLoansMonthly} onChange={v => update('otherLoansMonthly', v)} suffix="kr/mån" />
         </div>
 
         {/* Co-borrower */}
@@ -280,19 +271,17 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
           </div>
           {input.coBorrower.enabled && (
             <div>
-              <Label className="text-xs text-muted-foreground">Medsökandes månadsinkomst (SEK)</Label>
-              <Input type="number" min={0} value={input.coBorrower.monthlyIncome}
-                onChange={e => onChange({ ...input, coBorrower: { ...input.coBorrower, monthlyIncome: Math.max(0, Number(e.target.value)) } })}
-                className="font-mono" />
+              <Label className="text-xs text-muted-foreground">Medsökandes månadsinkomst</Label>
+              <NumberInput value={input.coBorrower.monthlyIncome}
+                onChange={v => onChange({ ...input, coBorrower: { ...input.coBorrower, monthlyIncome: v } })}
+                suffix="kr" />
             </div>
           )}
         </div>
 
         <div>
           <Label className="text-xs text-muted-foreground">Antal barn i hushållet</Label>
-          <Input type="number" min={0} max={10} value={input.numberOfChildren}
-            onChange={e => update('numberOfChildren', Math.max(0, Math.min(10, Number(e.target.value))))}
-            className="font-mono w-24" />
+          <NumberInput value={input.numberOfChildren} onChange={v => update('numberOfChildren', v)} min={0} max={10} className="w-24" />
         </div>
       </div>
 
@@ -330,14 +319,14 @@ export function CustomerForm({ input, onChange, config, onSaveScenario }: Custom
                 </Select>
               </div>
               <div className="flex-1">
-                <Label className="text-xs text-muted-foreground">Volym (SEK)</Label>
-                <Input type="number" min={0} value={entry.volume}
-                  onChange={e => {
+                <Label className="text-xs text-muted-foreground">Volym</Label>
+                <NumberInput value={entry.volume}
+                  onChange={v => {
                     const next = [...input.savings];
-                    next[i] = { ...next[i], volume: Math.max(0, Number(e.target.value)) };
+                    next[i] = { ...next[i], volume: v };
                     onChange({ ...input, savings: next });
                   }}
-                  className="font-mono h-9" />
+                  suffix="kr" className="h-9" />
               </div>
               <div className="shrink-0 text-right w-20">
                 {income > 0 && (
