@@ -61,6 +61,9 @@ export default function AdvisorPage() {
             <a href="/portfolio" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Portfölj
             </a>
+            <a href="/modell" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Modell
+            </a>
             <a href="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Admin
             </a>
